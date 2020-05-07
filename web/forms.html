@@ -1,0 +1,22 @@
+<!-- forms.html -->
+<html>
+   <head>
+      <title>
+         Teste da Nuvem.
+      </title>
+   </head>
+   <body>
+{{if .Success}}
+	<h1>Obrigado pela confirma&ccedil;&atilde;o!!!</h1>
+{{else}}
+   <h1>Confirma&ccedil;&atilde;o: </h1>
+	<form method="POST">
+		<label>Nome:</label><br />
+		<input type="text" name="nome"><br />
+      <label>Sobrenome:</label><br />
+		<input type="text" name="sobrenome"><br />
+		<input type="submit" value="Confirmar">
+	</form>
+{{end}}
+   </body>
+</html>
