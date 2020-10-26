@@ -1,0 +1,21 @@
+<!-- forms.html -->
+<html>
+   <head>
+      <title>
+         Servidor de Notas.
+      </title>
+   </head>
+   <body>
+   
+   <div>
+      <h1> Notas Existentes: </h1>
+      <ul>
+         {{range .Notes}}
+            <li><p><b>{{.Title}}</b>: {{.Content}}</p></li>
+         {{end}}
+      </ul>
+   </div>
+   <div>
+   <a href="/">Voltar</a>
+   </body>
+</html>
