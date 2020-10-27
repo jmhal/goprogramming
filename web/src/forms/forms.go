@@ -2,11 +2,11 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
+	"log"
 	"net/http"
-   "fmt"
-   "os"
-   "log"
+	"os"
 )
 
 func main() {
@@ -18,20 +18,19 @@ func main() {
 			return
 		}
 
-      nome := r.FormValue("nome")
-      sobrenome := r.FormValue("sobrenome")
+		nome := r.FormValue("nome")
+		sobrenome := r.FormValue("sobrenome")
 
-      file, err := os.OpenFile("confirmacoes.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-      if err != nil {
-         log.Fatal("Impossível abrir arquivo.", err)
-      }
-      defer file.Close()
+		file, err := os.OpenFile("confirmacoes.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal("Impossível abrir arquivo.", err)
+		}
+		defer file.Close()
 
-      fmt.Fprintf(file, "%s %s\n", nome, sobrenome)
+		fmt.Fprintf(file, "%s %s\n", nome, sobrenome)
 
 		tmpl.Execute(w, struct{ Success bool }{true})
 	})
 
 	http.ListenAndServe(":8080", nil)
 }
-
