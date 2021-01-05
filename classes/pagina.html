@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{.Nome}}</title>
+    <link rel="stylesheet" href="../../../css/styles.css">
+</head>
+
+<body>
+    <div class="navegacao">
+        <ul>
+            <li><a href="../../../index.html"> Início </a></li>
+            <li><a href="../../../disciplinas.html"> Disciplinas</a></li>
+            <li><a target="_blank" rel="noopener noreferrer" href="https://jmhal.github.io/"> Blog</a></li>
+            <li><a href="../../../contato.html"> Contato</a></li>
+        </ul>
+    </div>
+
+    <div class="disciplina">
+        <div class="disciplina-conteudo">
+            <h1>Linguagens de Programação 2020.1</h1>
+            Links importantes:
+            <ul>
+                {{range .Links}}
+                <li>
+                    <a href="{{.Url}}"> {{.Descricao}} </a>
+                </li>
+                {{end}}
+            </ul>
+            <h2>Objetivo</h2>
+
+            <p>
+               {{.Objetivo}}
+            </p>
+
+            <h2>Metodologia</h2>
+
+            <p>
+                {{.Metodologia}}
+            </p>
+
+            <p>O horário dos encontros será definido com a turma.</p>
+
+            <h2>Avaliação</h2>
+
+            <p>
+                {{.Avaliacao}}
+            </p>
+
+            <h2>Programa</h2>
+
+            <div class="disciplina-programa">
+                <table style="border-collapse: collapse;">
+                    <tr>
+                        <th>Data</th>
+                        <th>Assunto</th>
+                        <th>Comentários</th>
+                        <th>Vídeos</th>
+                        <th>Atividades</th>
+                    </tr>
+                    {{range .Aulas}}
+                    <tr>
+                        <td>{{.Data1}}</td>
+                        <td rowspan='2'>{{.Assunto}}</td>
+                        <td>{{.Comentario1}}</td>
+                        <td rowspan='2'><a href='{{.Video}}'> Vídeo </a></td>
+                        <td rowspan='2'><a href='{{.Atividade}}'> {{.NumeroAtividade}} </a></td>
+                    </tr>
+                    <tr>
+                        <td>{{.Data2}}</td>
+                        <td></td>
+                        <td>{{.Comentario2}}</td>
+                        <td rowspan></td>
+                        <td rowspan></td>
+                    </tr>
+                    {{end}}
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="navegacao">
+        <ul>
+
+        </ul>
+    </div>
+
+</body>
+
+</html>
