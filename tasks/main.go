@@ -36,7 +36,7 @@ var mongoOnce sync.Once
 
 //I have used below constants just to hold required database config's.
 const (
-	CONNECTIONSTRING = "mongodb://mongodb:27017"
+	CONNECTIONSTRING = "mongodb://localhost:27017"
 	DB               = "db_tasks_manager"
 	TASKS            = "col_tasks"
 )
@@ -49,8 +49,8 @@ func getMongoClient() (*mongo.Client, error) {
 		clientOptions := options.Client().ApplyURI(CONNECTIONSTRING)
 		// Connect to MongoDB
 		client, err := mongo.Connect(context.TODO(), clientOptions)
-		if err != nil {
-			clientInstanceError = err
+		if err != nil 
+			clientInstanceError = err	
 		}
 		// Check the connection
 		err = client.Ping(context.TODO(), nil)
