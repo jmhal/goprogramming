@@ -36,7 +36,7 @@ var mongoOnce sync.Once
 
 //I have used below constants just to hold required database config's.
 const (
-	CONNECTIONSTRING = "mongodb://localhost:27017"
+	CONNECTIONSTRING = "mongodb://mongodb:27017"
 	DB               = "db_tasks_manager"
 	TASKS            = "col_tasks"
 )
@@ -70,152 +70,63 @@ type Task struct {
 	DueDate string `json:"DueDate" bson:"DueDate"`
 }
 
-func dbReturnAllTasks() ([]Task, error) {
+func handleRequests() {
+	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter.HandleFunc("/tasks", returnAllTasks)
+	myRouter.HandleFunc("/task", createNewTask).Methods("POST")
+	myRouter.HandleFunc("/task/{id}", deleteTask).Methods("DELETE")
+	myRouter.HandleFunc("/task/{id}", updateTask).Methods("PUT")
+	myRouter.HandleFunc("/task/{id}", returnTask)
+
+	log.Fatal(http.ListenAndServe(":10000", myRouter))
+}
+
+func returnAllTasks(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: apiReturnAllTasks")
+
 	//Define filter query for fetching specific document from collection
 	filter := bson.D{{}} //bson.D{{}} specifies 'all documents'
 	tasks := []Task{}
 	//Get MongoDB connection using connectionhelper.
 	client, err := getMongoClient()
 	if err != nil {
-		return tasks, err
+		fmt.Println(err)
 	}
 	//Create a handle to the respective collection in the database.
 	collection := client.Database(DB).Collection(TASKS)
 	//Perform Find operation & validate against the error.
 	cur, findError := collection.Find(context.TODO(), filter)
 	if findError != nil {
-		return tasks, findError
+		fmt.Println(findError)
 	}
 	//Map result to slice
 	for cur.Next(context.TODO()) {
 		t := Task{}
 		err := cur.Decode(&t)
 		if err != nil {
-			return tasks, err
+			fmt.Println(err)
 		}
 		tasks = append(tasks, t)
 	}
 	// once exhausted, close the cursor
 	cur.Close(context.TODO())
-	if len(tasks) == 0 {
-		return tasks, mongo.ErrNoDocuments
-	}
-	return tasks, nil
-}
-
-//createTask - Insert a new document in the collection.
-func dbCreateNewTask(task Task) error {
-	//Get MongoDB connection using connectionhelper.
-	client, err := getMongoClient()
-	if err != nil {
-		return err
-	}
-	//Create a handle to the respective collection in the database.
-	collection := client.Database(DB).Collection(TASKS)
-	//Perform InsertOne operation & validate against the error.
-	_, err = collection.InsertOne(context.TODO(), task)
-	if err != nil {
-		return err
-	}
-	//Return success without any error.
-	return nil
-}
-
-func dbDeleteTask(id int) error {
-	//Define filter query for fetching specific document from collection
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	//Get MongoDB connection using connectionhelper.
-	client, err := getMongoClient()
-	if err != nil {
-		return err
-	}
-	//Create a handle to the respective collection in the database.
-	collection := client.Database(DB).Collection(TASKS)
-	//Perform DeleteOne operation & validate against the error.
-	_, err = collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		return err
-	}
-	//Return success without any error.
-	return nil
-}
-
-// MarkCompleted - MarkCompleted
-func dbUpdateTask(t Task) error {
-	//Define filter query for fetching specific document from collection
-	filter := bson.D{primitive.E{Key: "_id", Value: t.ID}}
-
-	//Define updater for to specifiy change to be updated.
-	updater := bson.D{primitive.E{Key: "$set", Value: bson.D{
-		primitive.E{Key: "Title", Value: t.Title},
-		primitive.E{Key: "Content", Value: t.Content},
-		primitive.E{Key: "DueDate", Value: t.DueDate},
-	}}}
-
-	//Get MongoDB connection using connectionhelper.
-	client, err := getMongoClient()
-	if err != nil {
-		return err
-	}
-	collection := client.Database(DB).Collection(TASKS)
-
-	//Perform UpdateOne operation & validate against the error.
-	_, err = collection.UpdateOne(context.TODO(), filter, updater)
-	if err != nil {
-		return err
-	}
-	//Return success without any error.
-	return nil
-}
-
-func dbReturnTask(id int) (Task, error) {
-	result := Task{}
-	//Define filter query for fetching specific document from collection
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	//Get MongoDB connection using connectionhelper.
-	client, err := getMongoClient()
-	if err != nil {
-		return result, err
-	}
-	//Create a handle to the respective collection in the database.
-	collection := client.Database(DB).Collection(TASKS)
-	//Perform FindOne operation & validate against the error.
-	err = collection.FindOne(context.TODO(), filter).Decode(&result)
-	if err != nil {
-		return result, err
-	}
-	//Return result without any error.
-	return result, nil
-}
-
-func handleRequests() {
-	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/tasks", apiReturnAllTasks)
-	myRouter.HandleFunc("/task", apiCreateNewTask).Methods("POST")
-	myRouter.HandleFunc("/task/{id}", apiDeleteTask).Methods("DELETE")
-	myRouter.HandleFunc("/task/{id}", apiUpdateTask).Methods("PUT")
-	myRouter.HandleFunc("/task/{id}", apiReturnTask)
-
-	log.Fatal(http.ListenAndServe(":10000", myRouter))
-}
-
-func apiReturnAllTasks(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Endpoint Hit: apiReturnAllTasks")
-	tasks, err := dbReturnAllTasks()
-	if err != nil {
-		fmt.Println(err)
-	}
 	json.NewEncoder(w).Encode(tasks)
-
 }
 
-func apiCreateNewTask(w http.ResponseWriter, r *http.Request) {
+func createNewTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: apiCreateNewTask")
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var task Task
 	json.Unmarshal(reqBody, &task)
 
-	err := dbCreateNewTask(task)
+	client, err := getMongoClient()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//Create a handle to the respective collection in the database.
+	collection := client.Database(DB).Collection(TASKS)
+	//Perform InsertOne operation & validate against the error.
+	_, err = collection.InsertOne(context.TODO(), task)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -223,18 +134,29 @@ func apiCreateNewTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-func apiDeleteTask(w http.ResponseWriter, r *http.Request) {
+func deleteTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: apiDeleteTask")
 	vars := mux.Vars(r)
 	id := vars["id"]
 	_id, _ := strconv.Atoi(id)
-	err := dbDeleteTask(_id)
+
+	//Define filter query for fetching specific document from collection
+	filter := bson.D{primitive.E{Key: "_id", Value: _id}}
+	//Get MongoDB connection using connectionhelper.
+	client, err := getMongoClient()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//Create a handle to the respective collection in the database.
+	collection := client.Database(DB).Collection(TASKS)
+	//Perform DeleteOne operation & validate against the error.
+	_, err = collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func apiUpdateTask(w http.ResponseWriter, r *http.Request) {
+func updateTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: apiUpdateTask")
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -245,19 +167,52 @@ func apiUpdateTask(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(reqBody, &task)
 
 	if _id == task.ID {
-		dbUpdateTask(task)
+		//Define filter query for fetching specific document from collection
+		filter := bson.D{primitive.E{Key: "_id", Value: _id}}
+
+		//Define updater for to specifiy change to be updated.
+		updater := bson.D{primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "Title", Value: task.Title},
+			primitive.E{Key: "Content", Value: task.Content},
+			primitive.E{Key: "DueDate", Value: task.DueDate},
+		}}}
+
+		//Get MongoDB connection using connectionhelper.
+		client, err := getMongoClient()
+		if err != nil {
+			fmt.Println(err)
+		}
+		collection := client.Database(DB).Collection(TASKS)
+
+		//Perform UpdateOne operation & validate against the error.
+		_, err = collection.UpdateOne(context.TODO(), filter, updater)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
-func apiReturnTask(w http.ResponseWriter, r *http.Request) {
+func returnTask(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: apiReturnTask")
 	vars := mux.Vars(r)
 	id := vars["id"]
 	_id, _ := strconv.Atoi(id)
 
-	task, err := dbReturnTask(_id)
+	result := Task{}
+	//Define filter query for fetching specific document from collection
+	filter := bson.D{primitive.E{Key: "_id", Value: _id}}
+	//Get MongoDB connection using connectionhelper.
+	client, err := getMongoClient()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//Create a handle to the respective collection in the database.
+	collection := client.Database(DB).Collection(TASKS)
+	//Perform FindOne operation & validate against the error.
+	err = collection.FindOne(context.TODO(), filter).Decode(&result)
+
 	if err == nil {
-		json.NewEncoder(w).Encode(task)
+		json.NewEncoder(w).Encode(result)
 	} else {
 		fmt.Println(err)
 	}
@@ -265,16 +220,5 @@ func apiReturnTask(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("Task API.")
-
-	dbCreateNewTask(Task{ID: 1,
-		Title:   "Primeira Tarefa",
-		Content: "Conteúdo da Primeira Tarefa",
-		DueDate: "2021-01-06"})
-
-	dbCreateNewTask(Task{ID: 2,
-		Title:   "Segunda Tarefa",
-		Content: "Conteúdo da Segunda Tarefa",
-		DueDate: "2021-01-07"})
-
 	handleRequests()
 }
