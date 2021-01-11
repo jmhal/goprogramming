@@ -1,7 +1,7 @@
 # STAGE 1: Build
 FROM golang:1.12-alpine AS build
 
-# Install Node and NPM.
+# Install Git
 RUN apk update && apk upgrade && apk add --no-cache git 
 
 # Get dependencies for Go part of build

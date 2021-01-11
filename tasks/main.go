@@ -49,8 +49,8 @@ func getMongoClient() (*mongo.Client, error) {
 		clientOptions := options.Client().ApplyURI(CONNECTIONSTRING)
 		// Connect to MongoDB
 		client, err := mongo.Connect(context.TODO(), clientOptions)
-		if err != nil 
-			clientInstanceError = err	
+		if err != nil {
+			clientInstanceError = err
 		}
 		// Check the connection
 		err = client.Ping(context.TODO(), nil)
