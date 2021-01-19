@@ -3,15 +3,22 @@ kind: Pod
 metadata:
   name: tasksapi
 spec:
+  volumes:
+    - name: "mongodb-data"
+      hostPath:
+        path: /tmp/mongodb
   containers:
-    - image: docker.io/jmhal/tasks:1.1
-      name: tasks
+    - image: docker.io/jmhal/tasks:1.2
+      name: api
       ports:
         - containerPort: 10000
           name: http
           protocol: TCP
     - image: docker.io/mongo:latest
       name: mongodb
+      volumeMounts:
+        - mountPath: "/data/db"
+          name: "mongodb-data"
       ports:
         - containerPort: 27017
           name: socket
